@@ -3,7 +3,7 @@
 1.install python-decouple using pip
 2.create .env file in the your script root directory
 3.write to .env file your api key and secret like this
-  1. API_KEY=myApiKEy
+  1. API_KEY=myApiKey
   2. API_SECRET=myApiSecret
 # prerequisites
 1. NFA
