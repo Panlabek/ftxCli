@@ -3,7 +3,7 @@ import sys
 from pprint import pprint
 import time
 from decouple import config
-key = config('API_KEY')
+key = config('API_KEY') 
 secret = config('API_SECRET') 
 colors = {"green": "\u001b[32m",
           "black": "\u001b[30m",
