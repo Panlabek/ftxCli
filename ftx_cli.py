@@ -78,7 +78,7 @@ def fetch_top_orderbook(symbol: str) -> list[float]:
     top_ask = res["asks"][0][0]
     return [top_bid, top_ask]
 
-def limit_chaser(symbol: str, side: str, amount: float, offset) -> None:
+def limit_chaser(symbol: str, side: str, amount: float, offset: float) -> None:
     amount = float(amount)
     offset = float(offset)
     side = side.lower()
@@ -168,49 +168,98 @@ def list_all_active_orders(symbol=None) -> None:
                 print(f"order amount: {magenta}{amount}{reset}, order id: {blue}{order_id}{reset}, how much filled: {magenta}{filled}{reset},"
                       f"order price: {magenta}{price}{reset}, order liquidation: {magenta}{liquidation}{reset}")
         else:
-            pprint(res)
+            pprint("res")
 
 def list_positions() -> None:
     #BASICALY FUNCTION CHECKS FOR FRESH POSITIONS
     res = exchange.fetch_positions()
+    magenta = colors["bright_magenta"]
+    yellow = colors["bright_yellow"]
+    blue = colors["bright_blue"]
+    reset = colors["reset"]
     for position in res:
         if position["info"]["recentPnl"] != None:
-            pprint(position)
+            market = position["symbol"]
+            side = position["info"]["side"]
+            markPrice = position["markPrice"]
+            notional_value = position["notional"]
+            prcnt_gain_lose = position["percentage"]
+            pnl = position["info"]["recentPnl"]
+            entry_price = position["info"]["entryPrice"]
+            liquidation = position["info"]["estimatedLiquidationPrice"]
+            if side == "buy":
+                side_color = colors["bright_green"]
+            else:
+                side_color = colors["bright_red"]
+            if prcnt_gain_lose > 0:
+                prcnt_color = colors["green"]
+            else:
+                prcnt_color = colors["red"]
+            print(f"Position Market: {yellow}{market}{reset}, Side: {side_color}{side}{reset}, MarkPrice: {magenta}{markPrice}{reset},"
+                  f"Notional Value: {magenta}{notional_value}{reset}, Percent Change: {prcnt_color}{prcnt_gain_lose}{reset}%,"
+                  f"PNL: {prcnt_color}{pnl}{reset}, Entry Price: {magenta}{entry_price}{reset}, liquidation: {blue}{liquidation}{reset}")
         else:
             pass
-def market_close_all_positions() -> None:
-    res = exchange.fetch_positions()
+def market_close_all_positions(symbol: str=None) -> None:
+    res = exchange.fetch_positions(symbol)
     for position in res:
         if position["info"]["recentPnl"] != None:
             market = position["symbol"]
             side = position["info"]["side"]
             amount = position["info"]["size"]
             pnl = position["info"]["recentPnl"]
+            notional_value = position["notional"]
+            reset = colors["reset"]
+            yellow = colors["yellow"]
+            magenta = colors["magenta"] 
             if side == "buy":
+                side_color = colors["bright_green"]
                 exchange.create_market_order(market, "sell", amount)
-                print(f"Position on {market}, {side}, {amount} has been closed, PNL: {pnl}")
+                print(f"Position on {yellow}{market}{reset} has been closed, Side: {side_color}{side}{reset}, Notional Value: {magenta}{notional_value}{reset}, PNL: {magenta}{pnl}{reset}")
             else:
+                side_color = colors["bright_red"]
                 exchange.create_market_order(market, "buy", amount)
-                print(f"Position on {market}, {side}, {amount} has been closed, PNL: {pnl}")
-def chase_close_all_positions() -> None:
-    res = exchange.fetch_positions()
+                print(f"Position on {yellow}{market}{reset} has been closed, Side: {side_color}{side}{reset}, Notional Value: {magenta}{notional_value}{reset}, PNL: {magenta}{pnl}{reset}")
+def chase_close_all_positions(symbol: str=None) -> None:
+    res = exchange.fetch_positions(symbol)
     for position in res:
         if position["info"]["recentPnl"] != None:
             market = position["symbol"]
             side = position["info"]["side"]
             amount = position["info"]["size"]
+            notional_value = position["notional"]
             pnl = position["info"]["recentPnl"]
             offset = float(position["markPrice"]) * 0.003
+            reset = colors["reset"]
+            yellow = colors["yellow"]
+            magenta = colors["magenta"] 
             if side == "buy":
+                side_color = colors["bright_green"]
                 limit_chaser(market, "sell", amount, offset)
-                print(f"Positon {market}, {side}, {amount} has been closed, PNL: {pnl}")
+                print(f"Position on {yellow}{market}{reset} has been closed, Side: {side_color}{side}{reset}, Notional Value: {magenta}{notional_value}{reset}, PNL: {magenta}{pnl}{reset}")
             else:
+                side_color = colors["bright_red"]
                 limit_chaser(market, "buy", amount, offset)
-                print(f"Positon {market}, {side}, {amount} has been closed, PNL: {pnl}")
+                print(f"Position on {yellow}{market}{reset} has been closed, Side: {side_color}{side}{reset}, Notional Value: {magenta}{notional_value}{reset}, PNL: {magenta}{pnl}{reset}")
 def help() -> None:
     # MAKE A DICT FOR FUNCTION NAMES AND ARGS THAT THEY TAKE
     # THIS WILL BE EASIER FOR THE FUTURE MANAGEMENT
-    # THERE SHOULD BE LIST OF COMMANDS
+    cyan = colors["bright_cyan"]
+    reset = colors["reset"]
+    magenta = colors["bright_magenta"]
+    yellow = colors["bright_yellow"]
+    available_functions = {"cancel_all_orders": ["symbol: str Default=None"],
+                           "scaled_order": ["symbol: str", "side: str", "total_amount_to_buy: float", "start_price: float", "end_price: float", "number_of_orders: int"],
+                           "limit_order": ["symbol: str", "side: str", "amount_to_buy: float", "price: float"],
+                           "market_order": ["symbol: str", "side: str", "amount_to_buy: flaot"],
+                           "limit_chaser": ["symbol: str", "side: str", "amount_to_buy: float", "offset: float"],
+                           "list_all_active_orders": ["symbol: str Default=None"],
+                           "list_positions": [None],
+                           "market_close_all_positions": ["symbol: str Default=None"],
+                           "chase_close_all_positions": ["symbol: str Default=None"]}
+    for key, value in available_functions.items():
+        print(f"function: {cyan}{key}{reset} | args: {magenta}{value}{reset}")
+    print(f"{yellow}How to use a function(mini tutorial): for example. cancel_all_orders AVAX-PERP{reset}")
     pass
 def main():
     func_name = sys.argv[1]
