@@ -11,3 +11,4 @@
 # TIP
 In your shell, alias ftx_cli.py like this alias cli="python cli.py /location/to/the/script"  
 
+
